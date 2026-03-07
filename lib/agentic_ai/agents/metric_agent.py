@@ -10,7 +10,6 @@ from lib.helpers.metrics_catalog import (
     SEGMENT_MAPPING,
     DIMENSION_ALIASES,
     get_catalog_markdown,
-    get_mapping_markdown
 )
 
 prompt_path = Path(__file__).parent.parent / "prompts" / "metric_system.md"

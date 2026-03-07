@@ -1,6 +1,7 @@
 import os
 import sys
 import asyncio
+import time
 import httpx
 import streamlit as st
 
@@ -10,15 +11,13 @@ if ROOT_DIR not in sys.path:
 
 import lib.utils.constants as constants
 
-
-st.set_page_config(page_title="Hotel Assistant", page_icon="H", layout="centered")
-
-st.title("Hotel Assistant")
-st.caption("Ask a question. The UI calls the local FastAPI backend.")
-
-print("[DEBUG][ui] app loaded")
-
 def render_ui():
+    st.set_page_config(page_title="Hotel Assistant", page_icon="H", layout="centered")
+
+    st.title("Hotel Assistant")
+    st.caption("Ask a question. And get insights on the go!")
+
+    print("[DEBUG][ui] app loaded")
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -42,8 +41,10 @@ def render_ui():
                     from lib.helpers.formatting import format_reply
 
                     print("[DEBUG][ui] running agent")
+                    start_ts = time.perf_counter()
                     result = asyncio.run(insight_agent.run(user_input))
-                    print("[DEBUG][ui] agent run complete")
+                    elapsed = time.perf_counter() - start_ts
+                    print(f"[DEBUG][ui] agent run complete in {elapsed:.2f}s")
                     reply = format_reply(result.output)
                 except Exception as exc:
                     print(f"[DEBUG][ui] agent error: {exc}")
