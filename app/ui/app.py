@@ -2,22 +2,21 @@ import os
 import sys
 import asyncio
 import time
-import httpx
 import streamlit as st
+import lib.utils.constants as constants
+from lib.agentic_ai.models import UserResponse
+from lib.agentic_ai.pipeline import run_pipeline
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-import lib.utils.constants as constants
-
 def render_ui():
-    st.set_page_config(page_title="Hotel Assistant", page_icon="H", layout="centered")
+    st.set_page_config(page_title="Hotel AI Strategist", page_icon="📈", layout="wide")
 
-    st.title("Hotel Assistant")
-    st.caption("Ask a question. And get insights on the go!")
+    st.title("Hotel AI Strategist")
+    st.caption("Professional commercial insights driven by real-time data.")
 
-    print("[DEBUG][ui] app loaded")
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -25,31 +24,36 @@ def render_ui():
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    user_input = st.chat_input("Ask about hotel performance, pickup, or risk...")
+    user_input = st.chat_input("Ex: 'Compare Executive room revenue this week vs last week'")
 
     if user_input:
-        print("[DEBUG][ui] user input received")
         st.session_state.messages.append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.markdown(user_input)
 
         with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
+            with st.spinner("Processing..."):
                 try:
-                    print("[DEBUG][ui] importing agent")
-                    from lib.agentic_ai.agents.insight_agent import insight_agent
-                    from lib.helpers.formatting import format_reply
-
-                    print("[DEBUG][ui] running agent")
                     start_ts = time.perf_counter()
-                    result = asyncio.run(insight_agent.run(user_input))
-                    elapsed = time.perf_counter() - start_ts
-                    print(f"[DEBUG][ui] agent run complete in {elapsed:.2f}s")
-                    reply = format_reply(result.output)
-                except Exception as exc:
-                    print(f"[DEBUG][ui] agent error: {exc}")
-                    reply = f"Agent error: {exc}"
-                st.markdown(reply)
 
-        st.session_state.messages.append({"role": "assistant", "content": reply})
-        print("[DEBUG][ui] reply rendered")
+                    response: UserResponse = asyncio.run(run_pipeline(user_input))
+
+                    elapsed = time.perf_counter() - start_ts
+
+                    st.subheader(response.headline)
+                    st.markdown(response.analysis)
+
+                    if response.recommendations:
+                        st.info("**Recommendations:**\n\n" + "\n".join([f"- {r}" for r in response.recommendations]))
+
+                    if response.status == "success":
+                        st.caption(f"Analysis completed in {elapsed:.2f}s")
+
+                    full_reply = f"### {response.headline}\n\n{response.analysis}"
+                    st.session_state.messages.append({"role": "assistant", "content": full_reply})
+
+                except Exception as exc:
+                    st.error(f"Pipeline Error: {exc}")
+
+if __name__ == "__main__":
+    render_ui()

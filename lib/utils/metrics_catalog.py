@@ -200,39 +200,7 @@ DEFAULT_METRICS_BY_INTENT = {
     "briefing": ["revenue", "cancelled_revenue", "pickup_room_nights", "ota_share"],
 }
 
-
-def normalize_metric(user_text: str) -> Optional[str]:
-    text = user_text.lower().strip()
-
-    for metric_key, metric_def in METRIC_CATALOG.items():
-        if metric_key == text:
-            return metric_key
-        for synonym in metric_def.synonyms:
-            if synonym in text:
-                return metric_key
-    return None
-
-
-def normalize_dimension(user_text: str) -> Optional[str]:
-    text = user_text.lower().strip()
-    for alias, canonical in DIMENSION_ALIASES.items():
-        if alias in text:
-            return canonical
-    return None
-
-
-def normalize_segment(user_text: str) -> Optional[str]:
-    text = user_text.lower().strip()
-    for alias, canonical in SEGMENT_MAPPING.items():
-        if alias in text:
-            return canonical
-    return None
-
-
-def is_metric_supported(metric_name: str) -> bool:
-    return metric_name in METRIC_CATALOG
-
-
+# HELPER FUNCTIONS
 def get_metric_definition(metric_name: str) -> MetricDefinition:
     if metric_name not in METRIC_CATALOG:
         raise ValueError(f"Unsupported metric: {metric_name}")
@@ -245,9 +213,3 @@ def get_catalog_markdown() -> str:
         synonyms = ", ".join(m.synonyms)
         rows.append(f"| {key} | {m.description} | {synonyms} | {m.date_field} |")
     return header + "\n".join(rows)
-
-def get_mapping_markdown() -> str:
-    # Quick helpers for segments and dimensions
-    segments = ", ".join([f"{k} -> {v}" for k, v in SEGMENT_MAPPING.items()])
-    dimensions = ", ".join([f"{k} -> {v}" for k, v in DIMENSION_ALIASES.items()])
-    return f"Segments: {segments}\nDimensions: {dimensions}"
