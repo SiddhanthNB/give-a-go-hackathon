@@ -6,7 +6,3 @@ load_dotenv()
 DB_URL = os.getenv('DB_URL')
 
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
-MISTRAL_API_KEY = os.getenv('MISTRAL_API_KEY')
-
-LLM_PROVIDER = 'mistral'

@@ -7,7 +7,7 @@ prompt_path = Path(__file__).parent.parent / "prompts" / "system" / "guardrail.m
 prompt = prompt_path.read_text()
 
 guardrail_agent = Agent(
-    get_model(),
+    get_model('guardrail'),
     output_type=GuardrailResponse,
     system_prompt=prompt
 )

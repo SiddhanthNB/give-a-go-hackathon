@@ -1,13 +1,17 @@
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Literal, Optional
-from datetime import date
+from typing import List, Dict, Any, Optional, Literal
+from datetime import date, datetime
 
 # --- INPUT LAYER ---
 class UserRequest(BaseModel):
     """The raw entry point into the pipeline."""
     query: str = Field(..., description="The user's natural language question")
-    current_date: date = Field(..., description="The reference 'today' for relative date math")
+    current_ts: datetime = Field(..., description="The reference timestamp for relative date math")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Auth or context data")
+
+class AgentContext(BaseModel):
+    """Shared context passed to all agents."""
+    current_ts: datetime = Field(..., description="Pipeline reference timestamp for relative calculations")
 
 # --- GUARDRAIL LAYER ---
 class GuardrailResponse(BaseModel):
@@ -40,17 +44,15 @@ class SQLResult(BaseModel):
 
 
 # --- OUTPUT LAYER ---
-class Insight(BaseModel):
-    """A specific observation made by the Strategist."""
-    type: str = Field(..., description="trend, alert, or opportunity")
-    message: str
-    impact: Optional[str] = None
+class StrategicOutcome(BaseModel):
+    """The raw output from the Strategist Agent before final formatting."""
+    headline: str = Field(..., description="The 'What': High-stakes executive summary")
+    highlights: List[str] = Field(default_factory=list, description="The 'Pulse': 3-4 numerical facts/observations found in the data")
+    judgment: str = Field(..., description="The 'Why': Concise narrative (max 3 sentences) on the strategic meaning behind the highlights")
+    recommendations: List[str] = Field(default_factory=list, description="The 'Action': Prescriptive steps")
 
 class UserResponse(BaseModel):
     """The final payload for the UI."""
-    headline: str = Field(..., description="Punchy summary of the result")
-    analysis: str = Field(..., description="Markdown-formatted deep dive")
-    comparison_data: Optional[List[Dict[str, Any]]] = None
-    insights: List[Insight] = Field(default_factory=list)
-    recommendations: List[str] = Field(default_factory=list)
-    status: Literal["success", "error"] = "success"
+    data: Optional[StrategicOutcome] = Field(None, description="The structured response to be rendered in the UI")
+    error: Optional[str] = Field(None, description="Error message if something went wrong")
+    success: bool = True

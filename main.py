@@ -1,3 +1,3 @@
-from app.ui.app import render_ui
+from app.ui.streamlit_ui import render_ui
 
 render_ui()
